@@ -107,7 +107,7 @@ else:
 
     if st.button("+ Add Expense"):
         if amount > 0:
-            add_expense(st.session_state.current_user, str(date), category, amount, note)
+            add_expense(st.session_state.current_user, str(date), category, amount, note, st.session_state.get("user", ""))
             st.success("Expense added successfully!")
             st.rerun()
         else:
