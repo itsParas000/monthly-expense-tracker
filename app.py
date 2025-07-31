@@ -49,12 +49,10 @@ if not st.session_state.is_logged_in:
         if st.button("Sign Up"):
             result = signup_user(email, password)
             if isinstance(result, dict):
-                db.collection("users").document(email).set(
-                    {
-                        "username": username,
-                        "email": email
-                    }
-                )
+                db.collection("users").document(email).set({
+                    "username": username,
+                    "email": email
+                })
                 st.success("Signup successful! Please login now.")
                 st.session_state.auth_mode = "Login"
         else:
