@@ -10,6 +10,7 @@ import seaborn as sns
 import io
 from fpdf import FPDF
 from streamlit_cookies_manager import EncryptedCookieManager
+from firestore_db import db
 
 # Setup secure cookie manager
 cookies = EncryptedCookieManager(prefix="moex_", password="your_very_secret_key")
@@ -44,9 +45,16 @@ if not st.session_state.is_logged_in:
     password = st.text_input("Password", type="password")
 
     if st.session_state.auth_mode == "Sign Up":
+        username = st.text_input("Username")
         if st.button("Sign Up"):
             result = signup_user(email, password)
             if isinstance(result, dict):
+                db.collection("users").document(email).set(
+                    {
+                        "username" : username,
+                        "email" : email
+                    }
+                )
                 st.success("Signup successful! Please login now.")
                 st.session_state.auth_mode = "Login"
             else:
@@ -56,15 +64,18 @@ if not st.session_state.is_logged_in:
         if st.button("Login"):
             result = login_user(email, password)
             if isinstance(result, dict):
-                st.success("Login successful!")
-                st.session_state["is_logged_in"] = True
-                st.session_state["current_user"] = email
-                st.session_state["user_token"] = result["idToken"]
+                user_doc = db.collection("users").document(email).get()
+                if user_doc.exist:
+                    st.session_state["username"] = user_doc.to_dict().get("username", "")
+                    st.success("Login successful!")
+                    st.session_state["is_logged_in"] = True
+                    st.session_state["current_user"] = email
+                    st.session_state["user_token"] = result["idToken"]
 
-                # Save in cookies
-                cookies["email"] = email
-                cookies["token"] = result["idToken"]
-                st.rerun()
+                    # Save in cookies
+                    cookies["email"] = email
+                    cookies["token"] = result["idToken"]
+                    st.rerun()
 
 # MAIN APP 
 else:
