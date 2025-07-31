@@ -1,0 +1,12 @@
+# Forcing a fresh dependency install: July 29, 2025
+streamlit
+pyrebase4
+firebase-admin
+google-cloud-storage
+oauth2client
+pycryptodome
+matplotlib
+seaborn
+fpdf
+pandas
+streamlit-cookies-manager
