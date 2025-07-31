@@ -23,9 +23,14 @@ def save_monthly_salary(user_email, month, salary):
         "salary": salary
     })
 
-def get_user_expenses(user_email):
-    docs = db.collection("expenses").where("user", "==", user_email).stream()
-    return [doc.to_dict() for doc in docs]
+def get_user_expenses(email):
+    expenses_ref = db.collection("expenses").where("user", "==", email).stream()
+    expenses = []
+    for doc in expenses_ref:
+        exp = doc.to_dict()
+        exp["id"] = doc.id  # Add this!
+        expenses.append(exp)
+    return expenses
 
 def get_user_salary(user_email):
     doc = db.collection("salary").document(user_email).get()
