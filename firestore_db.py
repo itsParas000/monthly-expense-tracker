@@ -7,15 +7,18 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-def add_expense(user_email, date, category, amount, note):
-    expense_data = {
+def add_expense(user_email, date, category, amount, note, username=""):
+    expense = {
         "user": user_email,
+        "username": username,
         "date": date,
         "category": category,
         "amount": amount,
         "note": note,
+        "timestamp": firestore.SERVER_TIMESTAMP,
     }
-    db.collection("expenses").add(expense_data)
+    db.collection("expenses").add(expense)
+
 
 def save_monthly_salary(user_email, month, salary):
     db.collection("salary").document(user_email).set({
