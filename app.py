@@ -39,51 +39,53 @@ if "auth_mode" not in st.session_state:
 
 # LOGIN / SIGNUP 
 if not st.session_state.is_logged_in:
-    if "auth_mode" not in st.session_state:
-        st.session_state.auth_mode = "Login"
-
     st.title("Login or Sign Up")
-
+    
     mode = st.radio("Select Option", ["Login", "Sign Up"], index=0 if st.session_state.auth_mode == "Login" else 1)
     st.session_state.auth_mode = mode
 
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    if st.session_state.auth_mode == "Sign Up":
+    if mode == "Sign Up":
         username = st.text_input("Username")
         if st.button("Sign Up"):
-            result = signup_user(email, password)
-            if isinstance(result, dict):
-                db.collection("users").document(email).set({
-                    "username": username,
-                    "email": email
-                })
-                st.success("Signup successful! Please login now.")
-                st.session_state.auth_mode = "Login"
-        else:
-            st.error(f"Error: {result}")
-
-elif st.session_state.auth_mode == "Login":
-    if st.button("Login"):
-        result = login_user(email, password)
-        if isinstance(result, dict):
-            user_doc = db.collection("users").document(email).get()
-            if user_doc.exists: 
-                user_data = user_doc.to_dict()
-                st.session_state["username"] = user_data.get("username", "")
-                st.success("Login successful!")
-
-                st.session_state["is_logged_in"] = True
-                st.session_state["current_user"] = email
-                st.session_state["user_token"] = result["idToken"]
-                cookies["email"] = email
-                cookies["token"] = result["idToken"]
-                st.rerun()
+            if not email or not password or not username:
+                st.warning("All fields are required.")
             else:
-                st.error("User profile not found.")
-        else:
-            st.error(f"Error: {result}")
+                result = signup_user(email, password)
+                if isinstance(result, dict):
+                    db.collection("users").document(email).set({
+                        "username": username,
+                        "email": email
+                    })
+                    st.success("Signup successful! Please login.")
+                    st.session_state.auth_mode = "Login"
+                else:
+                    st.error(f"Error: {result}")
+
+    else:  # Login
+        if st.button("Login"):
+            if not email or not password:
+                st.warning("Please enter both email and password.")
+            else:
+                result = login_user(email, password)
+                if isinstance(result, dict):
+                    user_doc = db.collection("users").document(email).get()
+                    if user_doc.exists:
+                        user_data = user_doc.to_dict()
+                        st.session_state["username"] = user_data.get("username", "")
+                        st.session_state["is_logged_in"] = True
+                        st.session_state["current_user"] = email
+                        st.session_state["user_token"] = result["idToken"]
+
+                        cookies["email"] = email
+                        cookies["token"] = result["idToken"]
+                        st.rerun()
+                    else:
+                        st.error("User not found.")
+                else:
+                    st.error(f"Error: {result}")
 
 
 # MAIN APP 
