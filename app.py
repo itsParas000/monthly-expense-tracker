@@ -3,7 +3,7 @@ import streamlit as st
 import datetime
 from firebase_auth import signup_user, login_user
 from session_manager import save_session, load_session, clear_session
-from firestore_db import add_expense,get_user_expenses, save_monthly_salary, get_user_salary, delete_expense
+from firestore_db import add_expense, get_user_expenses, save_monthly_salary, get_user_salary, delete_expense
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
