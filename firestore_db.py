@@ -32,3 +32,6 @@ def get_user_salary(user_email):
     if doc.exists:
         return doc.to_dict().get("salary", 0.0)
     return 0.0
+
+def delete_expense(doc_id):
+    db.collection("expenses").document(doc_id).delete()
