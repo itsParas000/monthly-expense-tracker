@@ -28,7 +28,7 @@ def get_user_expenses(email):
     expenses = []
     for doc in expenses_ref:
         exp = doc.to_dict()
-        exp["id"] = doc.id  # Add this!
+        exp["id"] = doc.id
         expenses.append(exp)
     return expenses
 
