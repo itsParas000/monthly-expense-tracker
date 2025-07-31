@@ -123,7 +123,7 @@ else:
         df.set_index("id", inplace=True)
 
         edited_df = st.data_editor(
-            df[["date", "category", "amount", "note"]],
+            df[["username","date", "category", "amount", "note"]],
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
