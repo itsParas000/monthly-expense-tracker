@@ -65,7 +65,7 @@ if not st.session_state.is_logged_in:
             result = login_user(email, password)
             if isinstance(result, dict):
                 user_doc = db.collection("users").document(email).get()
-                if user_doc.exist:
+                if user_doc.exists:
                     st.session_state["username"] = user_doc.to_dict().get("username", "")
                     st.success("Login successful!")
                     st.session_state["is_logged_in"] = True
