@@ -1,0 +1,9 @@
+# Secrets and credentials
+firebase_admin_key.json
+.streamlit/secrets.toml
+#CSV/JSON session and user data
+data/sessions/
+data/*.csv
+data/*.json
+# Python cache
+__pycache__/
