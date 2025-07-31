@@ -3,7 +3,7 @@ import streamlit as st
 import datetime
 from firebase_auth import signup_user, login_user
 from session_manager import save_session, load_session, clear_session
-from firestore_db import add_expense, get_user_expenses, save_monthly_salary, get_user_salary, delete_expense
+from firestore_db import add_expense,get_user_expenses, save_monthly_salary, get_user_salary, delete_expense
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -100,30 +100,47 @@ else:
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
+        
+        st.subheader("Expense Table (Editable)")
 
-        st.subheader("Expense Table")
+        # Set index for document tracking
+        df.set_index("id", inplace=True)
 
-        # Column headers
-        cols = st.columns([2, 2, 2, 3, 1])
-        cols[0].markdown("**Date**")
-        cols[1].markdown("**Category**")
-        cols[2].markdown("**Amount**")
-        cols[3].markdown("**Note**")
-        cols[4].markdown("**Action**")
-        # Loop through each expense row
-        for idx, row in df.iterrows():
-          cols = st.columns([2, 2, 2, 3, 1])
-          cols[0].markdown(f"{row['date'].date()}")
-          cols[1].markdown(row["category"])
-          cols[2].markdown(f"₹{row['amount']}")
-          cols[3].markdown(row["note"] if row["note"] else "-")
-          with cols[4]:
-            delete_btn = st.button("🗑️", key=f"del_{idx}")
-            if delete_btn:
-              delete_expense(row["id"])
-              st.success("Deleted!")
-              st.rerun()
-              
+        edited_df = st.data_editor(
+            df[["date", "category", "amount", "note"]],
+            num_rows="dynamic",
+            use_container_width=True,
+            key="expense_editor"
+        )
+
+        # Compare and detect deletions
+        deleted_ids = df.index.difference(edited_df.index)
+        if not deleted_ids.empty:
+            for doc_id in deleted_ids:
+                delete_expense(doc_id)
+            st.success("Deleted selected rows.")
+            st.rerun()
+
+        # Save edited entries
+        if st.button("Save Updates"):
+            for doc_id, row in edited_df.iterrows():
+                updated = {
+                    "date": row["date"].strftime("%Y-%m-%d"),
+                    "category": row["category"],
+                    "amount": float(row["amount"]),
+                    "note": row["note"]
+                }
+                # Push to Firestore
+                from firebase_admin import firestore
+                db = firestore.client()
+                db.collection("expenses").document(doc_id).update(updated)
+            st.success("Changes saved.")
+            st.rerun()
+
+        
+        
+        
+        
               # Salary and warnings
         saved_salary = get_user_salary(st.session_state.current_user)
         current_month = datetime.datetime.now().month
