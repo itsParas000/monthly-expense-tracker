@@ -26,12 +26,16 @@ if (
     st.session_state["user_token"] = cookies.get("token")
 
 # Initialize session defaults
+# Ensure default values in session_state
 if "is_logged_in" not in st.session_state:
     st.session_state.is_logged_in = False
+
 if "current_user" not in st.session_state:
     st.session_state.current_user = None
+
 if "auth_mode" not in st.session_state:
-    st.session_state.auth_mod = "Login"
+    st.session_state.auth_mode = "Login"
+
 
 # LOGIN / SIGNUP 
 if not st.session_state.is_logged_in:
