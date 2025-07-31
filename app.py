@@ -30,6 +30,8 @@ if "is_logged_in" not in st.session_state:
     st.session_state.is_logged_in = False
 if "current_user" not in st.session_state:
     st.session_state.current_user = None
+if "auth_mode" not in st.session_state:
+    st.session_state.auth_mod = "Login"
 
 # LOGIN / SIGNUP 
 if not st.session_state.is_logged_in:
