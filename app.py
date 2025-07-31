@@ -51,31 +51,36 @@ if not st.session_state.is_logged_in:
             if isinstance(result, dict):
                 db.collection("users").document(email).set(
                     {
-                        "username" : username,
-                        "email" : email
+                        "username": username,
+                        "email": email
                     }
                 )
                 st.success("Signup successful! Please login now.")
                 st.session_state.auth_mode = "Login"
+        else:
+            st.error(f"Error: {result}")
+
+elif st.session_state.auth_mode == "Login":
+    if st.button("Login"):
+        result = login_user(email, password)
+        if isinstance(result, dict):
+            user_doc = db.collection("users").document(email).get()
+            if user_doc.exists: 
+                user_data = user_doc.to_dict()
+                st.session_state["username"] = user_data.get("username", "")
+                st.success("Login successful!")
+
+                st.session_state["is_logged_in"] = True
+                st.session_state["current_user"] = email
+                st.session_state["user_token"] = result["idToken"]
+                cookies["email"] = email
+                cookies["token"] = result["idToken"]
+                st.rerun()
             else:
-                st.error(f"Error: {result}")
+                st.error("User profile not found.")
+        else:
+            st.error(f"Error: {result}")
 
-    elif st.session_state.auth_mode == "Login":
-        if st.button("Login"):
-            result = login_user(email, password)
-            if isinstance(result, dict):
-                user_doc = db.collection("users").document(email).get()
-                if user_doc.exists:
-                    st.session_state["username"] = user_doc.to_dict().get("username", "")
-                    st.success("Login successful!")
-                    st.session_state["is_logged_in"] = True
-                    st.session_state["current_user"] = email
-                    st.session_state["user_token"] = result["idToken"]
-
-                    # Save in cookies
-                    cookies["email"] = email
-                    cookies["token"] = result["idToken"]
-                    st.rerun()
 
 # MAIN APP 
 else:
@@ -88,7 +93,7 @@ else:
         st.success(f"Salary for {current_month} saved!")
 
     st.title("+ Add New Expense")
-    st.subheader(f"Welcome, {st.session_state.get('username', 'User')}")
+    st.subheader(f"Welcome, {st.session_state.get('username', st.session_state.current_user)}")
     date = st.date_input("Date", value=datetime.date.today())
     category = st.selectbox("Category", ["Food", "Grocery", "Transport", "Shopping", "Bills", "Entertainment", "Other"])
     amount = st.number_input("Amount (₹)", min_value=0.0, format="%.2f")
