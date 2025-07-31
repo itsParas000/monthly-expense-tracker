@@ -88,7 +88,7 @@ else:
         st.success(f"Salary for {current_month} saved!")
 
     st.title("+ Add New Expense")
-    st.subheader(f"Welcome, {st.session_state.current_user}")
+    st.subheader(f"Welcome, {st.session_state.get('username', 'User')}")
     date = st.date_input("Date", value=datetime.date.today())
     category = st.selectbox("Category", ["Food", "Grocery", "Transport", "Shopping", "Bills", "Entertainment", "Other"])
     amount = st.number_input("Amount (₹)", min_value=0.0, format="%.2f")
