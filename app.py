@@ -132,7 +132,8 @@ else:
 
         # Set index for document tracking
         edited_df = st.data_editor(
-            df[["date", "category", "amount", "note"]],
+            df[["username", "date", "category", "amount", "note"]],
+            column_config={"username": st.column_config.Column(disabled=True)},
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
