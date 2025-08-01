@@ -131,7 +131,6 @@ else:
         
         st.subheader("Expense Table (Editable)")
 
-        df.set_index("id", inplace=True)
         # Set index to doc ID for delete/edit tracking
         df.set_index("id", inplace=True)
 
