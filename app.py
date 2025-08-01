@@ -123,6 +123,7 @@ else:
 
     data = get_user_expenses(st.session_state.current_user)
 
+    
     if data:
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
@@ -131,6 +132,7 @@ else:
         st.subheader("Expense Table (Editable)")
 
         # Set index for document tracking
+        df.set_index("id", inplace=True)
         edited_df = st.data_editor(
             df[["username", "date", "category", "amount", "note"]],
             column_config={"username": st.column_config.Column(disabled=True)},
