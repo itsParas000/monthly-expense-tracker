@@ -141,7 +141,7 @@ else:
 
         st.subheader("Expense Table (Editable)")
         
-        # ✅ Columns to show/configure in editor
+        #  Columns to show/configure in editor
         edited_df = st.data_editor(
             df,
             column_config={
@@ -157,8 +157,8 @@ else:
             key="expense_editor"
         )
         
-        if st.button("Save Changes & Detect Deletions"):
-            # 🔁 Detect deleted rows
+        if st.button("Save Changes"):
+            #  Detect deleted rows
             original_ids = set(st.session_state.original_df["id"])
             edited_ids = set(edited_df["id"].dropna())
             deleted_ids = original_ids - edited_ids
@@ -167,7 +167,7 @@ else:
                 delete_expense(doc_id)
                 st.toast(f"Deleted expense {doc_id[:5]}...")
 
-            # 💾 Save updates and new rows
+            #  Save updates and new rows
             for _, row in edited_df.iterrows():
                 if pd.isna(row["id"]):
                     # This is a NEW row
