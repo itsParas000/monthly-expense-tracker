@@ -25,6 +25,11 @@ if (
     st.session_state["current_user"] = cookies.get("email")
     st.session_state["user_token"] = cookies.get("token")
 
+    #Restore Username from firestore
+    user_doc = db.collection("users").document(cookies.get("email")).get()
+    if user_doc.exists:
+        st.session_state["username"] = user_doc.to_dict().get("username", "")
+
 # Initialize session defaults
 # Ensure default values in session_state
 if "is_logged_in" not in st.session_state:
@@ -99,7 +104,7 @@ else:
         st.success(f"Salary for {current_month} saved!")
 
     st.title("+ Add New Expense")
-    st.subheader(f"Welcome, {st.session_state['username']}")
+    st.subheader(f"Welcome, {st.session_state.get('username', st.session.state.get('current_user', 'user'))}")
     date = st.date_input("Date", value=datetime.date.today())
     category = st.selectbox("Category", ["Food", "Grocery", "Transport", "Shopping", "Bills", "Entertainment", "Other"])
     amount = st.number_input("Amount (₹)", min_value=0.0, format="%.2f")
