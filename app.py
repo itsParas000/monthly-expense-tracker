@@ -123,32 +123,28 @@ else:
 
     data = get_user_expenses(st.session_state.current_user)
     if data:
-        # Convert to DataFrame
+        doc_ids = [d["id"] for d in data]  # Keep for updating
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
+        df.insert(0, "id", range(1, len(df) + 1))  # Insert S.No column
+        # Store Firestore ID in separate index (not shown)
+        df.index = doc_ids
+        df = df[["id", "username", "date", "category", "amount", "note"]]
 
-        # 🔒 Keep Firestore ID hidden internally
-        df["doc_id"] = df["id"]
-        df.drop(columns=["id"], inplace=True)
-
-        # ✅ Add visible serial number for display
-        df.insert(0, "id", range(1, len(df) + 1))  # 1, 2, 3...
-
-        # 🔒 Set doc_id as index for backend update/delete
-        df.set_index("doc_id", inplace=True)
 
         # ✅ Columns to show in editor
         visible_columns = ["id", "username", "date", "category", "amount", "note"]
 
         st.subheader("Expense Table (Editable)")
         edited_df = st.data_editor(
-            df[visible_columns],
+            df,
             column_config={"username": st.column_config.TextColumn(disabled=True)},
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
         )
+
 
         # 🔁 Detect deleted rows
         deleted_ids = df.index.difference(edited_df.index)
@@ -166,6 +162,7 @@ else:
                     "amount": float(row["amount"]),
                     "note": row["note"]
                 }
+                db.collection("expenses").document(str(doc_id)).update(updated)
                 doc_ref = db.collection("expenses").document(str(doc_id))
                 if doc_ref.get().exists:
                     doc_ref.update(updated)
