@@ -132,9 +132,11 @@ else:
         st.subheader("Expense Table (Editable)")
 
         # Set index for document tracking
+        visible_columns = ["date", "category", "amount", "note"]
         df.set_index("id", inplace=True)
         edited_df = st.data_editor(
-            df[["username", "date", "category", "amount", "note"]],
+            # df[["username", "date", "category", "amount", "note"]],
+            df[visible_columns],
             column_config={"username": st.column_config.Column(disabled=True)},
             num_rows="dynamic",
             use_container_width=True,
