@@ -122,22 +122,21 @@ else:
     st.subheader("Your Expenses")
 
     data = get_user_expenses(st.session_state.current_user)
-
-    
     if data:
+        # Ensure all records have 'id'
         if any("id" not in item for item in data):
             st.error("One or more records are missing 'id'. Cannot proceed.")
             st.stop()
+        # Build DataFrame and set 'id' as index
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
-        
+        df.set_index("id", inplace=True)
+
         st.subheader("Expense Table (Editable)")
 
-        # Set index to doc ID for delete/edit tracking
-        df.set_index("id", inplace=True)
-        # Now safely show only the visible columns
         visible_columns = ["username", "date", "category", "amount", "note"]
+        # Render editable table (id is now index, so not shown)
         edited_df = st.data_editor(
             df[visible_columns],
             column_config={"username": st.column_config.TextColumn(disabled=True)},
@@ -145,6 +144,7 @@ else:
             use_container_width=True,
             key="expense_editor"
         )
+
 
 
         # Compare and detect deletions
