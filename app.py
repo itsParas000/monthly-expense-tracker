@@ -47,7 +47,6 @@ if not st.session_state.is_logged_in:
     st.title("Login or Sign Up")
 
     #select the option to Sign up or Login
-    
     mode = st.radio("Select Option", ["Login", "Sign Up"], index=0 if st.session_state.auth_mode == "Login" else 1)
     st.session_state.auth_mode = mode
 
