@@ -97,7 +97,7 @@ if not st.session_state.is_logged_in:
 else:
     st.subheader("Monthly Salary")
     current_month = datetime.date.today().strftime("%B")
-    monthly_salary = st.number_input("Enter your Monthly Salary (₹)", min_value=0.0, format="%.2f")
+    monthly_salary = st.number_input("Enter your Monthly Salary (₹)", min_value=0.0, format="%.2f", key="salary_input")
 
     if st.button("Save Salary"):
         save_monthly_salary(st.session_state.current_user, current_month, monthly_salary)
@@ -105,85 +105,106 @@ else:
 
     st.title("+ Add New Expense")
     st.subheader(f"Welcome, {st.session_state.get('username', st.session_state.get('current_user', 'User'))}")
-    date = st.date_input("Date", value=datetime.date.today())
-    category = st.selectbox("Category", ["Food", "Grocery", "Transport", "Shopping", "Bills", "Entertainment", "Other"])
-    amount = st.number_input("Amount (₹)", min_value=0.0, format="%.2f")
-    note = st.text_input("Note (optional)")
-
-    if st.button("+ Add Expense"):
-        if amount > 0:
-            add_expense(st.session_state.current_user, str(date), category, amount, note, st.session_state.get("username", ""))
-            st.success("Expense added successfully!")
-            st.rerun()
-        else:
-            st.warning("Amount must be greater than 0.")
-
+    
+    with st.form("add_expense_form", clear_on_submit=True):
+        date = st.date_input("Date", value=datetime.date.today())
+        category = st.selectbox("Category", ["Food", "Grocery", "Transport", "Shopping", "Bills", "Entertainment", "Other"])
+        amount = st.number_input("Amount (₹)", min_value=0.0, format="%.2f")
+        note = st.text_input("Note (optional)")
+        submitted = st.form_submit_button("+ Add Expense")
+        
+        if submitted:
+            if amount > 0:
+                add_expense(st.session_state.current_user, str(date), category, amount, note, st.session_state.get("username", ""))
+                st.success("Expense added successfully!")
+            else:
+                st.warning("Amount must be greater than 0.")
+    
     st.markdown("---")
     st.subheader("Your Expenses")
 
     data = get_user_expenses(st.session_state.current_user)
     if data:
-        doc_ids = [d["id"] for d in data]  # Keep for updating
-        df = pd.DataFrame(data)
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
 
-        # Store Firestore IDs as index
-        df.set_index("id", inplace=True)
+        # We no longer set the index, keeping the 'id' as a regular column
+        # df.set_index("id", inplace=True) 
 
-        # Add S.No column for display
+        df = df.reset_index(drop=True)
         df.insert(0, "S.No", range(1, len(df) + 1))
-
-
-
-        # ✅ Columns to show in editor
-        visible_columns = ["S.No", "username", "date", "category", "amount", "note"]
+        
+        # Keep an original copy in session state to compare for changes
+        if "original_df" not in st.session_state:
+            st.session_state.original_df = df.copy()
 
         st.subheader("Expense Table (Editable)")
+        
+        # ✅ Columns to show/configure in editor
         edited_df = st.data_editor(
-            df[["S.No", "username", "date", "category", "amount", "note"]],
-            column_config={"username": st.column_config.TextColumn(disabled=True)},
+            df,
+            column_config={
+                "id": None,  # Hide the long Firestore ID
+                "user": None, # Hide user email
+                "timestamp": None, # Hide server timestamp
+                "S.No": st.column_config.TextColumn(width="small", disabled=True),
+                "username": st.column_config.TextColumn(disabled=True),
+            },
+            column_order=("S.No", "username", "date", "category", "amount", "note"),
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
         )
-
-
-
-        # 🔁 Detect deleted rows
-        deleted_ids = df.index.difference(edited_df.index)
-        if not deleted_ids.empty:
+        
+        if st.button("Save Changes & Detect Deletions"):
+            # 🔁 Detect deleted rows
+            original_ids = set(st.session_state.original_df["id"])
+            edited_ids = set(edited_df["id"].dropna())
+            deleted_ids = original_ids - edited_ids
+            
             for doc_id in deleted_ids:
-                delete_expense(str(doc_id))
-            st.success("Deleted selected rows.")
+                delete_expense(doc_id)
+                st.toast(f"Deleted expense {doc_id[:5]}...")
 
-        # 💾 Save updates
-        if st.button("Save Updates"):
-            for doc_id, row in edited_df.iterrows():
-                updated = {
-                    "date": row["date"].strftime("%Y-%m-%d"),
-                    "category": row["category"],
-                    "amount": float(row["amount"]),
-                    "note": row["note"]
-                }
-                db.collection("expenses").document(str(doc_id)).update(updated)
-                doc_ref = db.collection("expenses").document(str(doc_id))
-                if doc_ref.get().exists:
-                    doc_ref.update(updated)
-            st.success("Changes saved.")
+            # 💾 Save updates and new rows
+            for _, row in edited_df.iterrows():
+                if pd.isna(row["id"]):
+                    # This is a NEW row
+                    add_expense(
+                        st.session_state.current_user, 
+                        row["date"].strftime("%Y-%m-%d"), 
+                        row["category"], 
+                        row["amount"], 
+                        row["note"], 
+                        st.session_state.get("username", "")
+                    )
+                else:
+                    # This is an EXISTING row, check for changes before updating
+                    original_row = st.session_state.original_df.loc[st.session_state.original_df['id'] == row['id']]
+                    if not original_row.empty and not original_row.iloc[0].equals(row):
+                         updated_data = {
+                            "date": row["date"].strftime("%Y-%m-%d"),
+                            "category": row["category"],
+                            "amount": float(row["amount"]),
+                            "note": row["note"]
+                         }
+                         db.collection("expenses").document(row["id"]).update(updated_data)
+
+            st.success("All changes saved!")
+            del st.session_state.original_df 
             st.rerun()
 
         # Salary and warnings
         saved_salary = get_user_salary(st.session_state.current_user)
-        current_month = datetime.datetime.now().month
-        monthly_spent = df[df["date"].dt.month == current_month]["amount"].sum()
+        current_month_num = datetime.datetime.now().month
+        monthly_spent = df[df["date"].dt.month == current_month_num]["amount"].sum()
         savings = saved_salary - monthly_spent
 
         st.success(f"Total Monthly Spend: ₹{monthly_spent}")
         st.info(f"Remaining (Savings): ₹{savings}")
 
-        if monthly_spent > saved_salary:
+        if monthly_spent > saved_salary > 0:
             st.warning("You're spending more than your income this month!")
 
         if not df.empty:
