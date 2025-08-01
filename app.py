@@ -138,6 +138,9 @@ else:
         # Drop the 'id' column from display (it is now the index, so remove from columns)
         if "id" in df.columns:
             df.drop(columns=["id"], inplace=True)
+        else:
+            st.error("Error: 'id' field missing in expense data. Cannot proceed.")
+            st.stop()
 
         # Now safely show only the visible columns
         visible_columns = ["username", "date", "category", "amount", "note"]
