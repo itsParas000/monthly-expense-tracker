@@ -125,6 +125,9 @@ else:
 
     
     if data:
+        if any("id" not in item for item in data):
+            st.error("One or more records are missing 'id'. Cannot proceed.")
+            st.stop()
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
@@ -133,14 +136,6 @@ else:
 
         # Set index to doc ID for delete/edit tracking
         df.set_index("id", inplace=True)
-
-        # Drop the 'id' column from display (it is now the index, so remove from columns)
-        if "id" in df.columns:
-            df.drop(columns=["id"], inplace=True)
-        else:
-            st.error("Error: 'id' field missing in expense data. Cannot proceed.")
-            st.stop()
-
         # Now safely show only the visible columns
         visible_columns = ["username", "date", "category", "amount", "note"]
         edited_df = st.data_editor(
