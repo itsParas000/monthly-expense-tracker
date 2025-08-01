@@ -125,25 +125,30 @@ else:
     if data:
         doc_ids = [d["id"] for d in data]  # Keep for updating
         df = pd.DataFrame(data)
+        df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
-        df.insert(0, "id", range(1, len(df) + 1))  # Insert S.No column
-        # Store Firestore ID in separate index (not shown)
-        df.index = doc_ids
-        df = df[["id", "username", "date", "category", "amount", "note"]]
+
+        # Store Firestore IDs as index
+        df.set_index("id", inplace=True)
+
+        # Add S.No column for display
+        df.insert(0, "S.No", range(1, len(df) + 1))
+
 
 
         # ✅ Columns to show in editor
-        visible_columns = ["id", "username", "date", "category", "amount", "note"]
+        visible_columns = ["S.No", "username", "date", "category", "amount", "note"]
 
         st.subheader("Expense Table (Editable)")
         edited_df = st.data_editor(
-            df,
+            df[["S.No", "username", "date", "category", "amount", "note"]],
             column_config={"username": st.column_config.TextColumn(disabled=True)},
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
         )
+
 
 
         # 🔁 Detect deleted rows
