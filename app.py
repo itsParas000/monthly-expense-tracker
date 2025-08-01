@@ -159,7 +159,9 @@ else:
                 # Push to Firestore
                 from firebase_admin import firestore
                 db = firestore.client()
-                db.collection("expenses").document(str(doc_id)).update(updated)
+                doc_ref = db.collection("expenses").document(str(doc_id))
+                if doc_ref.get().exists:
+                    doc_ref.update(updated)
             st.success("Changes saved.")
             st.rerun()
 
