@@ -42,4 +42,4 @@ def get_user_salary(user_email):
     return 0.0
 
 def delete_expense(doc_id):
-    db.collection("expenses").document(doc_id).delete()
+    db.collection("expenses").document(str(doc_id)).delete()
