@@ -131,9 +131,13 @@ else:
         
         st.subheader("Expense Table (Editable)")
 
+        df.set_index("id", inplace=True)
+        # Drop the 'id' column from display
+        if "id" in df.columns:
+            df.drop(columns=['id'], inplace=True)
+            
         # Set index for document tracking
         visible_columns = ["username", "date", "category", "amount", "note"]
-        df.set_index("id", inplace=True)
         edited_df = st.data_editor(
             # df[["username", "date", "category", "amount", "note"]],
             df[visible_columns],
