@@ -129,16 +129,24 @@ else:
             st.error("One or more records are missing 'id'. Cannot proceed.")
             st.stop()
         # Build DataFrame and set 'id' as index
+        # Original df from Firestore with real document IDs
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
-        df["S.No"] = range(1, len(df) + 1) 
-        df.set_index("id", inplace=True)
-        
-        if "id" in df.columns:
-            df.drop(columns=["id"], inplace=True)
-        
-        visible_columns = ["S.No", "username", "date", "category", "amount", "note"]
+
+        # Save real Firestore doc ID separately for backend use
+        df["doc_id"] = df["id"]
+        df.drop(columns=["id"], inplace=True)
+
+        # Add user-visible serial ID
+        df.insert(0, "id", range(1, len(df) + 1))  # 👈 This is the visible "id"
+
+        # Now keep 'doc_id' as index for backend usage (not shown to user)
+        df.set_index("doc_id", inplace=True)
+
+        # Final visible columns
+        visible_columns = ["id", "username", "date", "category", "amount", "note"]
+
         # Render editable table (id is now index, so not shown)
         edited_df = st.data_editor(
             df[visible_columns],
