@@ -51,12 +51,12 @@ if not st.session_state.is_logged_in:
     mode = st.radio("Select Option", ["Login", "Sign Up"], index=0 if st.session_state.auth_mode == "Login" else 1)
     st.session_state.auth_mode = mode
 
-    username = st.text_input("Username")
+    
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
     if mode == "Sign Up":
-        
+        username = st.text_input("Username")
         if st.button("Sign Up"):
             if not email or not password or not username:
                 st.warning("All fields are required.")
