@@ -132,20 +132,23 @@ else:
         st.subheader("Expense Table (Editable)")
 
         df.set_index("id", inplace=True)
-        # Drop the 'id' column from display
+        # Set index to doc ID for delete/edit tracking
+        df.set_index("id", inplace=True)
+
+        # Drop the 'id' column from display (it is now the index, so remove from columns)
         if "id" in df.columns:
-            df.drop(columns=['id'], inplace=True)
-            
-        # Set index for document tracking
-        visible_columns = ["date", "category", "amount", "note"]
+            df.drop(columns=["id"], inplace=True)
+
+        # Now safely show only the visible columns
+        visible_columns = ["username", "date", "category", "amount", "note"]
         edited_df = st.data_editor(
-            # df[["username", "date", "category", "amount", "note"]],
             df[visible_columns],
             column_config={"username": st.column_config.TextColumn(disabled=True)},
             num_rows="dynamic",
             use_container_width=True,
             key="expense_editor"
         )
+
 
         # Compare and detect deletions
         deleted_ids = df.index.difference(edited_df.index)
