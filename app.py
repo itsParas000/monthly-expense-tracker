@@ -145,7 +145,7 @@ else:
             for doc_id in deleted_ids:
                 delete_expense(str(doc_id))
             st.success("Deleted selected rows.")
-            st.rerun()
+            
 
         # Save edited entries
         if st.button("Save Updates"):
