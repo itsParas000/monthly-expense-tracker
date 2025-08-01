@@ -158,7 +158,7 @@ else:
                 # Push to Firestore
                 from firebase_admin import firestore
                 db = firestore.client()
-                db.collection("expenses").document(doc_id).update(updated)
+                db.collection("expenses").document(str(doc_id)).update(updated)
             st.success("Changes saved.")
             st.rerun()
 
