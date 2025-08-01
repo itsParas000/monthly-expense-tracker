@@ -137,7 +137,7 @@ else:
             df.drop(columns=['id'], inplace=True)
             
         # Set index for document tracking
-        visible_columns = ["username", "date", "category", "amount", "note"]
+        visible_columns = ["date", "category", "amount", "note"]
         edited_df = st.data_editor(
             # df[["username", "date", "category", "amount", "note"]],
             df[visible_columns],
