@@ -122,6 +122,7 @@ else:
     st.subheader("Your Expenses")
 
     data = get_user_expenses(st.session_state.current_user)
+    st.subheader("Expense Table")
     if data:
         # Ensure all records have 'id'
         if any("id" not in item for item in data):
@@ -132,9 +133,9 @@ else:
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
         df.set_index("id", inplace=True)
-
-        st.subheader("Expense Table (Editable)")
-
+        if "id" in df.columns:
+            df.drop(columns=["id"], inplace=True)
+        
         visible_columns = ["username", "date", "category", "amount", "note"]
         # Render editable table (id is now index, so not shown)
         edited_df = st.data_editor(
