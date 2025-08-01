@@ -122,32 +122,26 @@ else:
     st.subheader("Your Expenses")
 
     data = get_user_expenses(st.session_state.current_user)
-    st.subheader("Expense Table")
     if data:
-        # Ensure all records have 'id'
-        if any("id" not in item for item in data):
-            st.error("One or more records are missing 'id'. Cannot proceed.")
-            st.stop()
-        # Build DataFrame and set 'id' as index
-        # Original df from Firestore with real document IDs
+        # Convert to DataFrame
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
 
-        # Save real Firestore doc ID separately for backend use
+        # 🔒 Keep Firestore ID hidden internally
         df["doc_id"] = df["id"]
         df.drop(columns=["id"], inplace=True)
 
-        # Add user-visible serial ID
-        df.insert(0, "id", range(1, len(df) + 1))  # 👈 This is the visible "id"
+        # ✅ Add visible serial number for display
+        df.insert(0, "id", range(1, len(df) + 1))  # 1, 2, 3...
 
-        # Now keep 'doc_id' as index for backend usage (not shown to user)
+        # 🔒 Set doc_id as index for backend update/delete
         df.set_index("doc_id", inplace=True)
 
-        # Final visible columns
+        # ✅ Columns to show in editor
         visible_columns = ["id", "username", "date", "category", "amount", "note"]
 
-        # Render editable table (id is now index, so not shown)
+        st.subheader("Expense Table (Editable)")
         edited_df = st.data_editor(
             df[visible_columns],
             column_config={"username": st.column_config.TextColumn(disabled=True)},
@@ -156,17 +150,14 @@ else:
             key="expense_editor"
         )
 
-
-
-        # Compare and detect deletions
+        # 🔁 Detect deleted rows
         deleted_ids = df.index.difference(edited_df.index)
         if not deleted_ids.empty:
             for doc_id in deleted_ids:
                 delete_expense(str(doc_id))
             st.success("Deleted selected rows.")
-            
 
-        # Save edited entries
+        # 💾 Save updates
         if st.button("Save Updates"):
             for doc_id, row in edited_df.iterrows():
                 updated = {
@@ -175,20 +166,13 @@ else:
                     "amount": float(row["amount"]),
                     "note": row["note"]
                 }
-                # Push to Firestore
-                from firebase_admin import firestore
-                db = firestore.client()
                 doc_ref = db.collection("expenses").document(str(doc_id))
                 if doc_ref.get().exists:
                     doc_ref.update(updated)
             st.success("Changes saved.")
             st.rerun()
 
-        
-        
-        
-        
-              # Salary and warnings
+        # Salary and warnings
         saved_salary = get_user_salary(st.session_state.current_user)
         current_month = datetime.datetime.now().month
         monthly_spent = df[df["date"].dt.month == current_month]["amount"].sum()
