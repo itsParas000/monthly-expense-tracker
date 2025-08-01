@@ -132,11 +132,13 @@ else:
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date", ascending=False)
+        df["S.No"] = range(1, len(df) + 1) 
         df.set_index("id", inplace=True)
+        
         if "id" in df.columns:
             df.drop(columns=["id"], inplace=True)
         
-        visible_columns = ["username", "date", "category", "amount", "note"]
+        visible_columns = ["S.No", "username", "date", "category", "amount", "note"]
         # Render editable table (id is now index, so not shown)
         edited_df = st.data_editor(
             df[visible_columns],
