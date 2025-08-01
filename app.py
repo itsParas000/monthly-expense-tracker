@@ -142,7 +142,7 @@ else:
         deleted_ids = df.index.difference(edited_df.index)
         if not deleted_ids.empty:
             for doc_id in deleted_ids:
-                delete_expense(doc_id)
+                delete_expense(str(doc_id))
             st.success("Deleted selected rows.")
             st.rerun()
 
